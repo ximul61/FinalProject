@@ -1,0 +1,151 @@
+           // The Code is modified and written by Alok Shaw, the creator of the Youtube channel : www.youtube.com/roboshala and runs an educational blog : www.roboshala.com
+
+#include <ESP8266WiFi.h>
+#include<FirebaseArduino.h>
+#include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
+
+#define FIREBASE_HOST "homeauto-66e66.firebaseio.com"                     //Your Firebase Project URL goes here without "http:" , "\" and "/"
+#define FIREBASE_AUTH "M0DtdnRaYQWCy7JQlfgOGoHZGhdFDueAKT47Uh58"       //Your Firebase Database Secret goes here
+#define WIFI_SSID "Mahids_Home"                                               //your WiFi SSID for which yout NodeMCU connects
+#define WIFI_PASSWORD "123456781"                                      //Password of your wifi network 
+
+int outputpin = A0;
+
+int val1;
+int val2;
+int val3;
+int val4;
+int val5;
+int val6;
+
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(D1, OUTPUT);
+  pinMode(D2, OUTPUT);
+  pinMode(D5, OUTPUT);
+  pinMode(D6, OUTPUT);
+  pinMode(D7, OUTPUT);
+  pinMode(D8, OUTPUT);
+
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("connecting");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println();
+  Serial.print("connected: ");
+  Serial.println(WiFi.localIP());
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  Firebase.set("S1", 0);
+  Firebase.set("S2", 0);
+  Firebase.set("S3", 0);
+  Firebase.set("S4", 0);
+  Firebase.set("S5", 0);
+  Firebase.set("S6", 0);
+}
+void firebasereconnect()
+{
+  Serial.println("Trying to reconnect");
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+}
+
+void loop() {
+  if (Firebase.failed())
+  {
+    Serial.print("setting number failed:");
+    Serial.println(Firebase.error());
+    firebasereconnect();
+    return;
+  }
+
+  val1 = Firebase.getInt("S1");
+  //Serial.println(val1);
+  if (val1 == 1)                                                          // If, the Status is 1, turn on the Relay1
+  {
+    digitalWrite(D1, LOW);
+    //Serial.println("light 1 ON");
+  }
+  else if (val1 == 0)                                                   // If, the Status is 0, turn Off the Relay1
+  {
+    digitalWrite(D1, HIGH);
+    //Serial.println("light 1 OFF");
+  }
+
+  val2 = Firebase.getInt("S2");
+  //Serial.println(val2);
+  if (val2 == 1)                                                          // If, the Status is 1, turn on the Relay1
+  {
+    digitalWrite(D2, LOW);
+    //Serial.println("light 2 ON");
+  }
+  else if (val2 == 0)                                                   // If, the Status is 0, turn Off the Relay1
+  {
+    digitalWrite(D2, HIGH);
+   // Serial.println("light 2 OFF");
+  }
+
+  val3 = Firebase.getInt("S3");
+  //Serial.println(val3);
+  if (val3 == 1)                                                          // If, the Status is 1, turn on the Relay1
+  {
+    digitalWrite(D5, LOW);
+    //Serial.println("light 3 ON");
+  }
+  else if (val3 == 0)                                                   // If, the Status is 0, turn Off the Relay1
+  {
+    digitalWrite(D5, HIGH);
+    //Serial.println("light 3 OFF");
+  }
+
+  val4 = Firebase.getInt("S4");
+  //Serial.println(val4);
+  if (val4 == 1)                                                          // If, the Status is 1, turn on the Relay1
+  {
+    digitalWrite(D6, LOW);
+    //Serial.println("light 4 ON");
+  }
+  else if (val4 == 0)                                                   // If, the Status is 0, turn Off the Relay1
+  {
+    digitalWrite(D6, HIGH);
+    //Serial.println("light 4 OFF");
+  }
+
+  val5 = Firebase.getInt("S5");
+  //Serial.println(val5);
+  if (val5 == 1)                                                          // If, the Status is 1, turn on the Relay1
+  {
+    digitalWrite(D7, LOW);
+    //Serial.println("light 5 ON");
+  }
+  else if (val4 == 0)                                                   // If, the Status is 0, turn Off the Relay1
+  {
+    digitalWrite(D7, HIGH);
+    //Serial.println("light 5 OFF");
+  }
+
+
+  val6 = Firebase.getInt("S6");
+  //Serial.println(val6);
+  if (val6 == 1)                                                          // If, the Status is 1, turn on the Relay1
+  {
+    digitalWrite(D8, LOW);
+    //Serial.println("light 4 ON");
+  }
+  else if (val6 == 0)                                                   // If, the Status is 0, turn Off the Relay1
+  {
+    digitalWrite(D8, HIGH);
+    //Serial.println("light 6 OFF");
+  }
+  
+  int analogValue = analogRead(outputpin);
+  float millivolts = (analogValue/1024.0)*3300 ;
+  float celsius = millivolts / 10;
+  Serial.print("DegreeC=   ");
+  Serial.println(celsius);
+  Firebase.set("S6",celsius);
+  delay(500);
+}

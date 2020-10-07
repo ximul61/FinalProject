@@ -10,25 +10,26 @@
 #define WIFI_SSID "Mahids_Home"                                               //your WiFi SSID for which yout NodeMCU connects
 #define WIFI_PASSWORD "123456781"                                      //Password of your wifi network 
 
-int outputpin = A0;
 
+#define MUX_A D4
+#define MUX_B D5
+#define MUX_C D6
+#define ANALOG_INPUT A0
 int val1;
 int val2;
 int val3;
 int val4;
 int val5;
-int val6;
+
 
 void setup()
 {
   Serial.begin(9600);
   pinMode(D1, OUTPUT);
   pinMode(D2, OUTPUT);
-  pinMode(D5, OUTPUT);
-  pinMode(D6, OUTPUT);
-  pinMode(D7, OUTPUT);
-  pinMode(D8, OUTPUT);
-
+  pinMode(MUX_A, OUTPUT);
+  pinMode(MUX_B, OUTPUT);     
+  pinMode(MUX_C, OUTPUT);
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("connecting");
@@ -40,12 +41,16 @@ void setup()
   Serial.print("connected: ");
   Serial.println(WiFi.localIP());
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
-  Firebase.set("S1", 0);
-  Firebase.set("S2", 0);
-  Firebase.set("S3", 0);
-  Firebase.set("S4", 0);
-  Firebase.set("S5", 0);
-  Firebase.set("S6", 0);
+  Firebase.set("Light", 0);
+  Firebase.set("Fan", 0);
+  Firebase.set("LDR", 0);
+  Firebase.set("Smoke", 0);
+  Firebase.set("TEMPRATURE", 0);
+}
+void changeMux(int c, int b, int a) {
+  digitalWrite(MUX_A, a);
+  digitalWrite(MUX_B, b);
+  digitalWrite(MUX_C, c);
 }
 void firebasereconnect()
 {
@@ -87,65 +92,33 @@ void loop() {
     digitalWrite(D2, HIGH);
    // Serial.println("light 2 OFF");
   }
-
-  val3 = Firebase.getInt("S3");
-  //Serial.println(val3);
-  if (val3 == 1)                                                          // If, the Status is 1, turn on the Relay1
-  {
-    digitalWrite(D5, LOW);
-    //Serial.println("light 3 ON");
-  }
-  else if (val3 == 0)                                                   // If, the Status is 0, turn Off the Relay1
-  {
-    digitalWrite(D5, HIGH);
-    //Serial.println("light 3 OFF");
-  }
-
-  val4 = Firebase.getInt("S4");
-  //Serial.println(val4);
-  if (val4 == 1)                                                          // If, the Status is 1, turn on the Relay1
-  {
-    digitalWrite(D6, LOW);
-    //Serial.println("light 4 ON");
-  }
-  else if (val4 == 0)                                                   // If, the Status is 0, turn Off the Relay1
-  {
-    digitalWrite(D6, HIGH);
-    //Serial.println("light 4 OFF");
-  }
-
-  val5 = Firebase.getInt("S5");
-  //Serial.println(val5);
-  if (val5 == 1)                                                          // If, the Status is 1, turn on the Relay1
-  {
-    digitalWrite(D7, LOW);
-    //Serial.println("light 5 ON");
-  }
-  else if (val4 == 0)                                                   // If, the Status is 0, turn Off the Relay1
-  {
-    digitalWrite(D7, HIGH);
-    //Serial.println("light 5 OFF");
-  }
-
-
-  val6 = Firebase.getInt("S6");
-  //Serial.println(val6);
-  if (val6 == 1)                                                          // If, the Status is 1, turn on the Relay1
-  {
-    digitalWrite(D8, LOW);
-    //Serial.println("light 4 ON");
-  }
-  else if (val6 == 0)                                                   // If, the Status is 0, turn Off the Relay1
-  {
-    digitalWrite(D8, HIGH);
-    //Serial.println("light 6 OFF");
-  }
+  float ldr_value;
+  float temp;
+  float smoke_value;
   
-  int analogValue = analogRead(outputpin);
-  float millivolts = (analogValue/1024.0)*3300 ;
-  float celsius = millivolts / 10;
-  Serial.print("DegreeC=   ");
-  Serial.println(celsius);
-  Firebase.set("S6",celsius);
-  delay(500);
+  changeMux(LOW, LOW, LOW);
+  ldr_value = analogRead(ANALOG_INPUT); //Value of the sensor connected Option 0 pin of Mux
+  Serial.print("LDR Value 0: "); 
+  Serial.println(ldr_value); 
+  delay(1000);
+  Firebase.set("LDR", ldr_value);
+  
+ 
+  changeMux(HIGH, LOW, LOW);
+  smoke_value = analogRead(ANALOG_INPUT); //Value of the sensor connected Option 4 pin of Mux
+  Serial.print("SMoke Sensor Scale on PPM: "); 
+  Serial.println(smoke_value); 
+  delay(1000);
+  Firebase.set("Smoke", smoke_value);
+  
+  changeMux(HIGH, HIGH, LOW);
+  temp = analogRead(ANALOG_INPUT); //Value of the sensor connected Option 6 pin of Mux 
+  float mv = ( temp/1024.0)*3300;
+  float cel = mv/10;
+  Serial.print("TEMPRATURE = ");
+  Serial.print(cel);
+  Serial.print("*C");
+  Serial.println();
+  delay(1000);
+  Firebase.set("TEMPRATURE", cel);
 }
